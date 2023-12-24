@@ -1,3 +1,4 @@
+
 #include "settings.h"
 #include "ui_settings.h"
 
@@ -32,21 +33,30 @@ Settings::Settings(QWidget *parent)
 
     ui->listFunctions->setCurrentRow(0);
 
+    std::stringstream ss;
     for (size_t i = 0; i < dim; ++i) {
-        ui->listDomain->addItem(std::format("x{}: [{}, {}]", i + 1, min_point[i], max_point[i]).c_str());
-        ui->listStartPoint->addItem(std::format("x{}: {}", i + 1, start_point[i]).c_str());
+        ui->listDomain->addItem((ss.str(""),
+                                 ss << "x" << i + 1 << ": [" << min_point[i] << ", " << max_point[i] << "]",
+                                 ss.str().c_str()));
+        ui->listStartPoint->addItem((ss.str(""),
+                                     ss << "x" << i + 1 << ": " << start_point[i],
+                                     ss.str().c_str()));
     }
 
     ui->radioButtonMethod->click();
     ui->radioButtonStopper->click();
 
-    ui->editDim->setText(std::format("{}", dim).c_str());
-    ui->editNiter->setText(std::format("{}", niter).c_str());
-    ui->editEps->setText(std::format("{}", eps).c_str());
-    ui->editProb->setText(std::format("{}", prob).c_str());
-    ui->editDelta->setText(std::format("{}", delta).c_str());
-    ui->editAlpha->setText(std::format("{}", alpha).c_str());
-    ui->editSeed->setText(std::format("{}", seed).c_str());
+    ui->editMin->setEnabled(false);
+    ui->editMax->setEnabled(false);
+    ui->editStart->setEnabled(false);
+
+    ui->editDim->setText(QString::number(dim));
+    ui->editNiter->setText(QString::number(niter));
+    ui->editEps->setText(QString::number(eps));
+    ui->editProb->setText(QString::number(prob));
+    ui->editDelta->setText(QString::number(delta));
+    ui->editAlpha->setText(QString::number(alpha));
+    ui->editSeed->setText(QString::number(seed));
 }
 
 Settings::~Settings()
@@ -62,19 +72,36 @@ void Settings::on_editDim_textEdited(const QString &arg1)
     start_point.resize(dim);
     ui->listDomain->clear();
     ui->listStartPoint->clear();
+    std::stringstream ss;
     for (Index i = 0; i < min_point.size(); ++i) {
         min_point[i] = -2;
         max_point[i] = 2;
         start_point[i] = 0;
-        ui->listDomain->addItem(std::format("x{}: [{}, {}]", i + 1, min_point[i], max_point[i]).c_str());
-        ui->listStartPoint->addItem(std::format("x{}: {}", i + 1, start_point[i]).c_str());
+        ui->listDomain->addItem((ss.str(""),
+                                 ss << "x" << i + 1 << ": [" << min_point[i] << ", " << max_point[i] << "]",
+                                 ss.str().c_str()));
+        ui->listStartPoint->addItem((ss.str(""),
+                                     ss << "x" << i + 1 << ": " << start_point[i],
+                                     ss.str().c_str()));
     }
+    ui->editMin->clear();
+    ui->editMax->clear();
+    ui->editStart->clear();
+
+    ui->editMin->setEnabled(false);
+    ui->editMax->setEnabled(false);
+    ui->editStart->setEnabled(false);
+
 }
 
 void Settings::on_radioButtonMethod_clicked()
 {
     ui->stackedWidgetParams2->setCurrentIndex(0);
     m = method::Deterministic;
+    ui->editSeed->setText(QString::number(std::chrono::system_clock::now().time_since_epoch().count()));
+    ui->editProb->setText("0.6");
+    ui->editDelta->setText("1");
+    ui->editAlpha->setText("1");
 }
 
 void Settings::on_radioButtonMethod_2_clicked()
@@ -93,46 +120,50 @@ void Settings::on_radioButtonStopper_2_clicked()
 {
     ui->stackedWidgetParams1->setCurrentIndex(0);
     s = stopper::Number;
+    ui->editEps->setText("0.001");
 }
 
 void Settings::on_listStartPoint_itemClicked(QListWidgetItem *item)
 {
     Index ind = ui->listStartPoint->currentRow();
-    ui->editStart->setText(std::format("{}", start_point[ind]).c_str());
+    ui->editStart->setText(QString::number(start_point[ind]));
+    ui->editStart->setEnabled(true);
 }
 
 void Settings::on_editStart_textEdited(const QString &arg1)
 {
     Index ind = ui->listStartPoint->currentRow();
     start_point[ind] = arg1.toDouble();
-    ui->listStartPoint->currentItem()->setText(std::format("x{}: {}", ind + 1, start_point[ind]).c_str());
+    std::stringstream ss;
+    ui->listStartPoint->currentItem()->setText((ss << "x" << ind + 1 << ": " << start_point[ind],
+                                                ss.str().c_str()));
 }
 
 void Settings::on_listDomain_itemClicked(QListWidgetItem *item)
 {
     Index ind = ui->listDomain->currentRow();
-    ui->editMin->setText(std::format("{}", min_point[ind]).c_str());
-    ui->editMax->setText(std::format("{}", max_point[ind]).c_str());
+    ui->editMin->setText(QString::number(min_point[ind]));
+    ui->editMax->setText(QString::number(max_point[ind]));
+    ui->editMin->setEnabled(true);
+    ui->editMax->setEnabled(true);
 }
 
 void Settings::on_editMin_textEdited(const QString &arg1)
 {
     Index ind = ui->listDomain->currentRow();
     min_point[ind] = arg1.toDouble();
-    ui->listDomain->currentItem()->setText(std::format("x{}: [{}, {}]",
-                                                       ind + 1,
-                                                       min_point[ind],
-                                                       max_point[ind]).c_str());
+    std::stringstream ss;
+    ui->listDomain->currentItem()->setText((ss << "x" << ind + 1 << ": [" << min_point[ind] << ", " << max_point[ind] << "]",
+                                            ss.str().c_str()));
 }
 
 void Settings::on_editMax_textEdited(const QString &arg1)
 {
     Index ind = ui->listDomain->currentRow();
     max_point[ind] = arg1.toDouble();
-    ui->listDomain->currentItem()->setText(std::format("x{}: [{}, {}]",
-                                                       ind + 1,
-                                                       min_point[ind],
-                                                       max_point[ind]).c_str());
+    std::stringstream ss;
+    ui->listDomain->currentItem()->setText((ss << "x" << ind + 1 << ": [" << min_point[ind] << ", " << max_point[ind] << "]",
+                                            ss.str().c_str()));
 }
 
 bool Settings::check_input()
@@ -144,6 +175,14 @@ bool Settings::check_input()
     num = ui->editNiter->text().toLongLong();
     if (num <= 0 || num > 1000000)
         warnings += "Max number of iterations must be > 0 and <= 1000000.\n";
+
+    num = ui->editDim->text().toLongLong();
+    if (num <= 1)
+        warnings += "Dimentionality must be > 1.\n";
+
+    num = ui->editSeed->text().toInt();
+    if (num < 0)
+        warnings += "Seed must be >= 0.\n";
 
     x = ui->editEps->text().toDouble();
     if (x <= 0)
@@ -161,11 +200,19 @@ bool Settings::check_input()
     if (x <= 0 || x > 1)
         warnings += "Probability must be > 0 and <= 1.\n";
 
+
+    std::stringstream ss;
     for (Index i = 0; i < min_point.size(); ++i) {
-        if (min_point[i] > max_point[i])
-            warnings += std::format("Min[{0}] must be < Max[{0}]\n", i + 1);
-        else if (start_point[i] < min_point[i] || start_point[i] > max_point[i])
-            warnings += std::format("Start point[{0}] must be >= min[{0}] and <= max[{0}]", i + 1);
+        if (min_point[i] > max_point[i]) {
+            ss.str("");
+            ss << "Min[" << i + 1 << "] must be < Max[" << i + 1 << "].\n";
+            warnings += ss.str();
+        }
+        else if (start_point[i] < min_point[i] || start_point[i] > max_point[i]) {
+            ss.str("");
+            ss << "Start point[" << i + 1 << "] must be >= Min[" << i + 1 << "] and <= Max[" << i + 1 << "].\n";
+            warnings += ss.str();
+        }
     }
 
     if (warnings == "")
@@ -235,6 +282,9 @@ void Settings::on_listFunctions_itemClicked(QListWidgetItem *item)
     ui->editMin->clear();
     ui->editMax->clear();
     ui->editStart->clear();
+    ui->editMin->setEnabled(false);
+    ui->editMax->setEnabled(false);
+    ui->editStart->setEnabled(false);
 }
 
 void Settings::done(int r)
